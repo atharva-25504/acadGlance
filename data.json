@@ -6,13 +6,6 @@
     "totalDays": 97,
     "dateLabel": "Mon 07 Sep"
   },
-  "nextSession": {
-    "course": "ISDC",
-    "code": "S01",
-    "start": "2026-09-07T19:45:00+05:30",
-    "end": "2026-09-07T21:15:00+05:30",
-    "room": "Room 204"
-  },
   "deadlines": [
     {
       "id": "mdt",
