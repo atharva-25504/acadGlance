@@ -318,34 +318,58 @@
     stripEl.style.transform = 'translateY(-' + (digit * 88) + 'px)';
   }
 
+  function findNextSession(d, now){
+    var upcoming = null, live = null;
+    for (var i=0;i<d.sessions.length;i++){
+      var s = d.sessions[i];
+      var start = new Date(s.start), end = new Date(s.end);
+      if (now >= start && now < end){ live = s; break; }
+      if (end > now && (!upcoming || start < new Date(upcoming.start))) upcoming = s;
+    }
+    return live ? { session: live, isLive: true } : { session: upcoming, isLive: false };
+  }
+
   function renderLiveBits(d){
     if (!d) return;
     var now = new Date();
 
     document.getElementById('railNow').style.top = railFrac(now) + '%';
 
-    var ns = new Date(d.nextSession.start);
-    var diffMs = ns - now;
     var untilLabel = document.getElementById('untilLabel');
     var target = document.getElementById('targetLabel');
     var meta = document.getElementById('metaLabel');
     var railNext = document.getElementById('railNext');
 
-    if (diffMs <= 0 && now < new Date(d.nextSession.end)) {
-      untilLabel.textContent = 'In session';
+    var found = findNextSession(d, now);
+    if (!found.session){
+      untilLabel.textContent = 'No more sessions this week';
+      target.textContent = '—';
+      meta.textContent = '—';
+      railNext.style.display = 'none';
       setDigit(null, document.getElementById('stripTens'), 0);
       setDigit(null, document.getElementById('stripOnes'), 0);
     } else {
-      var hoursLeft = Math.max(diffMs, 0) / 36e5;
-      var hh = Math.min(Math.floor(hoursLeft), 99);
-      var tens = Math.floor(hh/10), ones = hh%10;
-      if (tens !== lastTens){ setDigit(null, document.getElementById('stripTens'), tens); lastTens = tens; }
-      if (ones !== lastOnes){ setDigit(null, document.getElementById('stripOnes'), ones); lastOnes = ones; }
-      untilLabel.textContent = 'Next session in';
+      var s = found.session;
+      var start = new Date(s.start), end = new Date(s.end);
+      if (found.isLive){
+        untilLabel.textContent = 'In session';
+        setDigit(null, document.getElementById('stripTens'), 0);
+        setDigit(null, document.getElementById('stripOnes'), 0);
+        railNext.style.top = railFrac(end) + '%';
+      } else {
+        var diffMs = start - now;
+        var hoursLeft = Math.max(diffMs, 0) / 36e5;
+        var hh = Math.min(Math.floor(hoursLeft), 99);
+        var tens = Math.floor(hh/10), ones = hh%10;
+        if (tens !== lastTens){ setDigit(null, document.getElementById('stripTens'), tens); lastTens = tens; }
+        if (ones !== lastOnes){ setDigit(null, document.getElementById('stripOnes'), ones); lastOnes = ones; }
+        untilLabel.textContent = 'Next session in';
+        railNext.style.top = railFrac(start) + '%';
+      }
+      railNext.style.display = '';
+      target.textContent = s.course + ' · ' + s.code;
+      meta.textContent = start.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false}) + ' · ' + s.room;
     }
-    target.textContent = d.nextSession.course + ' · ' + d.nextSession.code;
-    meta.textContent = ns.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false}) + ' · ' + d.nextSession.room;
-    railNext.style.top = railFrac(ns) + '%';
 
     var dl = d.deadlines[0];
     if (dl){
@@ -355,7 +379,6 @@
       if (el) el.textContent = daysLeft + 'D';
     }
   }
-
   var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function runSpring(from, to, velocity, opts, onUpdate, onDone){
     if (prefersReducedMotion){ onUpdate(to); onDone && onDone(); return; }
