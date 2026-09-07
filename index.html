@@ -1,1 +1,520 @@
-<!doctype html><html><head><meta charset="utf-8"><title>acadGlance</title></head><body style="background:#08090C;color:#EEF2FA;font-family:sans-serif;padding:40px;"><h1>acadGlance</h1><p>Placeholder — live data lands here soon.</p></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>acadGlance</title>
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#08090C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="acadGlance">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="icon" href="./icon-512.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void: #08090C; --void-2: #0E1015; --void-3: #15181F;
+    --hairline: rgba(180,200,255,0.08); --hairline-strong: rgba(180,200,255,0.20);
+    --text-primary: #EEF2FA; --text-muted: #767C94; --text-faint: #43485C;
+    --blue: #03E1FF; --blue-glow: rgba(3,225,255,0.5);
+    --green: #00FFA3; --green-glow: rgba(0,255,163,0.5);
+    --purple: #DC1FFF; --purple-glow: rgba(220,31,255,0.5);
+    --sat: env(safe-area-inset-top, 0px); --sab: env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box;}
+  html{ color-scheme:dark; height:100%; }
+  html,body{margin:0;padding:0; height:100%; overscroll-behavior:none; }
+  button{ font:inherit; color:inherit; background:none; border:0; padding:0; margin:0; text-align:inherit; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+  button:focus-visible, .tile:focus-visible{ outline:2px solid var(--blue); outline-offset:2px; border-radius:8px; }
+  body{ background:var(--void); height:100%; font-family:"Manrope",-apple-system,sans-serif; color:var(--text-primary); overflow:hidden; position:fixed; inset:0; width:100%; }
+
+  .device{ width:100%; height:100%; background:var(--void-2); position:relative; overflow:hidden; display:flex; }
+
+  .aurora{ position:absolute; inset:-20%; z-index:0; pointer-events:none; filter:blur(72px); opacity:0.30; }
+  .aurora span{ position:absolute; border-radius:50%; mix-blend-mode:screen; }
+  .a1{ width:260px; height:260px; background:var(--green); top:-60px; left:-60px; animation:drift1 30s ease-in-out infinite; }
+  .a2{ width:300px; height:300px; background:var(--blue); top:40%; right:-100px; animation:drift2 34s ease-in-out infinite; }
+  .a3{ width:240px; height:240px; background:var(--purple); bottom:-80px; left:20%; animation:drift3 32s ease-in-out infinite; }
+  @keyframes drift1{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(40px,60px) scale(1.15); } }
+  @keyframes drift2{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(-50px,30px) scale(0.9); } }
+  @keyframes drift3{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(30px,-40px) scale(1.1); } }
+  .scrim{ position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:radial-gradient(ellipse 380px 560px at 62% 44%, rgba(8,9,12,0.15) 0%, rgba(8,9,12,0.6) 60%, rgba(8,9,12,0.9) 100%); }
+  .grain{ position:absolute; inset:0; z-index:6; pointer-events:none;
+    background:repeating-linear-gradient(to bottom, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px); }
+
+  .rail{ position:relative; z-index:7; width:46px; flex:none; height:100%;
+    padding:calc(28px + var(--sat)) 0 calc(26px + var(--sab)); display:flex; flex-direction:column; align-items:center; }
+  .rail-track{ position:relative; flex:1; width:1px; background:var(--hairline-strong); }
+  .rail-tick{ position:absolute; left:-3px; width:7px; height:1px; background:var(--hairline-strong); }
+  .rail-tick-lbl{ position:absolute; left:12px; transform:translateY(-50%); font-family:"JetBrains Mono",monospace; font-size:8px; color:var(--text-faint); letter-spacing:0.04em; }
+  .rail-now{ position:absolute; left:-4px; width:9px; height:9px; border-radius:50%; background:var(--blue); box-shadow:0 0 10px var(--blue-glow); transform:translate(0,-50%); animation:pulse-slow 3.6s ease-in-out infinite; transition:top 1s ease; }
+  @keyframes pulse-slow{ 0%,100%{ opacity:1; transform:translate(0,-50%) scale(1); } 50%{ opacity:0.55; transform:translate(0,-50%) scale(0.78); } }
+  .rail-next{ position:absolute; left:-9px; display:flex; align-items:center; gap:6px; transform:translateY(-50%); }
+  .rail-next .mark{ width:5px; height:5px; border-radius:50%; background:var(--purple); box-shadow:0 0 8px var(--purple-glow); }
+
+  .viewport{ position:relative; z-index:2; flex:1; height:100%; overflow:hidden; }
+  .track{ display:flex; width:200%; height:100%; will-change:transform; touch-action:pan-y; }
+  .panel{ width:50%; height:100%; padding:calc(28px + var(--sat)) 22px calc(20px + var(--sab)) 8px; display:flex; flex-direction:column; gap:18px; flex:none; overflow-y:auto; }
+
+  .term-line{ font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:0.13em; color:var(--text-faint); text-transform:uppercase; display:flex; justify-content:space-between; align-items:center; }
+  .term-line span:last-child{ color:var(--text-muted); }
+
+  .hero{ position:relative; display:flex; align-items:flex-start; justify-content:space-between; padding:6px 0 4px; }
+  .hero-main{ display:flex; flex-direction:column; gap:6px; }
+  .hero-main .until{ font-family:"JetBrains Mono",monospace; font-size:9.5px; letter-spacing:0.18em; color:var(--text-faint); text-transform:uppercase; opacity:0; animation: fade-up 0.7s ease 0.15s forwards; }
+  .odometer{ display:flex; align-items:baseline; height:88px; overflow:hidden; }
+  .digit-col{ position:relative; width:52px; height:88px; overflow:hidden; }
+  .digit-col .strip{ display:flex; flex-direction:column; position:absolute; top:0; left:0; font-family:"JetBrains Mono",monospace; font-weight:700; font-size:80px; line-height:88px; color:var(--text-primary); font-variant-numeric:tabular-nums; text-shadow:0 4px 20px rgba(0,0,0,0.7); transform:translateY(0); transition:transform 1.9s cubic-bezier(.19,1,.22,1); }
+  .digit-col .strip span{ height:88px; }
+  .odometer .unit{ font-size:15px; color:var(--blue); margin-left:8px; font-weight:600; align-self:flex-end; margin-bottom:12px; text-shadow:0 2px 10px rgba(0,0,0,0.6); }
+  .hero-main .progress{ width:180px; height:3px; border-radius:2px; background:var(--hairline); margin-top:2px; overflow:hidden; opacity:0; animation:fade-up 0.7s ease 1.3s forwards; }
+  .hero-main .progress-fill{ height:100%; width:0%; background:linear-gradient(90deg,var(--green),var(--blue),var(--purple)); border-radius:2px; transition:width 2.4s cubic-bezier(.16,1,.3,1); }
+  .hero-main .target{ font-size:15px; font-weight:700; color:var(--blue); text-shadow:0 1px 8px rgba(0,0,0,0.7); opacity:0; animation: fade-up 0.7s ease 1.55s forwards; }
+  .hero-main .meta{ font-family:"JetBrains Mono",monospace; font-size:10.5px; color:var(--text-muted); text-shadow:0 1px 6px rgba(0,0,0,0.6); opacity:0; animation: fade-up 0.7s ease 1.7s forwards; }
+  @keyframes fade-up{ from{ opacity:0; transform:translateY(4px); } to{ opacity:1; transform:translateY(0); } }
+
+  .hero-side{ writing-mode:vertical-rl; transform:rotate(180deg); font-family:"JetBrains Mono",monospace; font-size:9.5px; letter-spacing:0.16em; color:var(--text-faint); text-transform:uppercase; padding-top:4px; opacity:0; animation:fade-up 0.8s ease 0.9s forwards; }
+
+  .sec-lbl{ font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:0.15em; color:var(--text-faint); text-transform:uppercase; display:flex; align-items:center; gap:8px; }
+  .sec-lbl::after{ content:""; flex:1; height:1px; background:var(--hairline); }
+  .sec-lbl.link{ cursor:pointer; color:var(--blue); width:100%; background:none; border:0; }
+
+  .bento{ display:grid; grid-template-columns:1.5fr 1fr; gap:10px; }
+  .bento-stack{ display:flex; flex-direction:column; gap:10px; }
+  .tile{ background:rgba(255,255,255,0.035); backdrop-filter:blur(16px) saturate(150%); -webkit-backdrop-filter:blur(16px) saturate(150%);
+    border:1px solid rgba(255,255,255,0.09); border-radius:16px; padding:15px 15px 13px; position:relative; display:flex; flex-direction:column; gap:8px; cursor:pointer;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 20px rgba(0,0,0,0.2); width:100%; }
+  .tile.big{ min-height:140px; justify-content:flex-end; }
+  .tile.small{ flex:1; justify-content:center; }
+  .tile::before{ content:""; position:absolute; left:0; top:14px; bottom:14px; width:2px; border-radius:2px; }
+  .tile.urgent::before{ background:var(--purple); box-shadow:0 0 8px var(--purple-glow); }
+  .tile.steady::before{ background:var(--blue); box-shadow:0 0 8px var(--blue-glow); }
+  .tile.flat::before{ background:var(--text-faint); }
+  .tile .tlbl{ font-family:"JetBrains Mono",monospace; font-size:9px; letter-spacing:0.11em; color:var(--text-faint); text-transform:uppercase; }
+  .tile .tval{ font-size:26px; font-weight:800; font-variant-numeric:tabular-nums; line-height:1.1; text-shadow:0 1px 6px rgba(0,0,0,0.55); }
+  .tile.small .tval{ font-size:19px; }
+  .tile.urgent .tval{ color:var(--purple); }
+  .tile.steady .tval{ color:var(--text-primary); }
+  .tile .tsub{ font-size:11.5px; color:var(--text-muted); line-height:1.4; text-shadow:0 1px 4px rgba(0,0,0,0.5); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .tile .tap-hint{ font-family:"JetBrains Mono",monospace; font-size:8.5px; color:var(--text-faint); letter-spacing:0.06em; }
+
+  .wave{ display:flex; align-items:flex-end; gap:9px; height:64px; padding:0 2px; }
+  .wave-bar{ flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; height:100%; justify-content:flex-end; }
+  .wave-bar .stem{ width:9px; height:56px; border-radius:5px; background:var(--hairline); position:relative; overflow:hidden; }
+  .wave-bar .stem i{ position:absolute; bottom:0; left:0; right:0; background:var(--green); box-shadow:0 0 6px var(--green-glow); border-radius:5px; height:0%; transition:height 1.6s cubic-bezier(.16,1,.3,1); }
+  .wave-bar .rlbl{ font-family:"JetBrains Mono",monospace; font-size:8.5px; letter-spacing:0.04em; color:var(--text-muted); }
+  .wave-note{ font-family:"JetBrains Mono",monospace; font-size:9.5px; color:var(--text-faint); margin-top:2px; }
+
+  .footer-note{ margin-top:auto; display:flex; justify-content:center; gap:6px; padding-top:4px; flex:none; }
+  .dot{ width:5px; height:5px; border-radius:50%; background:var(--hairline-strong); transition:background 0.3s ease, box-shadow 0.3s ease; }
+  .dot.active{ background:var(--blue); box-shadow:0 0 6px var(--blue-glow); }
+
+  .row{ display:flex; align-items:center; gap:12px; padding:13px 0; border-top:1px solid var(--hairline); }
+  .row:first-child{ border-top:none; }
+  .row .rc-bar{ width:3px; align-self:stretch; border-radius:2px; }
+  .row .rc-body{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .row .rc-course{ font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row .rc-meta{ font-family:"JetBrains Mono",monospace; font-size:10.5px; color:var(--text-muted); }
+  .row .rc-day{ font-family:"JetBrains Mono",monospace; font-size:9.5px; color:var(--text-faint); letter-spacing:0.08em; text-transform:uppercase; text-align:right; width:52px; }
+
+  .back-hint{ display:flex; align-items:center; gap:6px; font-family:"JetBrains Mono",monospace; font-size:9.5px; letter-spacing:0.1em; color:var(--text-faint); text-transform:uppercase; cursor:pointer; }
+  .back-hint svg{ width:12px; height:12px; }
+
+  .overlay{ position:absolute; z-index:20; background:rgba(255,255,255,0.035); backdrop-filter:blur(22px) saturate(150%); -webkit-backdrop-filter:blur(22px) saturate(150%);
+    border:1px solid rgba(255,255,255,0.09); overflow:hidden; display:flex; flex-direction:column; touch-action:none; overscroll-behavior:contain; }
+  .overlay.hidden{ pointer-events:none; opacity:0; }
+  .overlay .ov-accent{ height:3px; background:var(--purple); box-shadow:0 0 10px var(--purple-glow); flex:none; }
+  .overlay .ov-body{ padding:calc(22px + var(--sat)) 22px calc(20px + var(--sab)); display:flex; flex-direction:column; gap:14px; overflow-y:auto; }
+  .overlay .ov-lbl{ font-family:"JetBrains Mono",monospace; font-size:9.5px; letter-spacing:0.13em; color:var(--text-faint); text-transform:uppercase; }
+  .overlay .ov-title{ font-size:24px; font-weight:800; color:var(--text-primary); text-shadow:0 2px 10px rgba(0,0,0,0.6); }
+  .overlay .ov-count{ font-family:"JetBrains Mono",monospace; font-size:44px; font-weight:700; color:var(--purple); font-variant-numeric:tabular-nums; text-shadow:0 2px 12px rgba(0,0,0,0.7); }
+  .overlay .ov-count .u{ font-size:15px; margin-left:6px; color:var(--text-muted); }
+  .overlay .ov-list{ display:flex; flex-direction:column; gap:0; margin-top:6px; }
+  .overlay .ov-item{ display:flex; justify-content:space-between; font-size:13px; padding:11px 0; border-top:1px solid var(--hairline); color:var(--text-muted); text-shadow:0 1px 4px rgba(0,0,0,0.5); }
+  .overlay .ov-item b{ color:var(--text-primary); font-weight:600; }
+  .overlay .ov-grip{ width:36px; height:4px; border-radius:2px; background:var(--hairline-strong); margin:10px auto 0; }
+  .overlay .ov-close{ font-family:"JetBrains Mono",monospace; font-size:10px; letter-spacing:0.1em; color:var(--text-faint); text-transform:uppercase; margin-top:auto; align-self:flex-start; cursor:pointer; padding-top:8px; }
+
+  .loading{ position:fixed; inset:0; z-index:50; background:var(--void); display:flex; align-items:center; justify-content:center;
+    font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:0.14em; color:var(--text-faint); text-transform:uppercase; transition:opacity 0.5s ease; }
+  .loading.hidden{ opacity:0; pointer-events:none; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="loading" id="loading">acadGlance</div>
+
+<div class="device" id="device">
+  <div class="aurora"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div>
+  <div class="scrim"></div>
+  <div class="grain"></div>
+
+  <div class="rail" aria-hidden="true">
+    <div class="rail-track" id="railTrack">
+      <div class="rail-tick" style="top:0%;"></div><div class="rail-tick-lbl" style="top:0%;">06</div>
+      <div class="rail-tick" style="top:25%;"></div><div class="rail-tick-lbl" style="top:25%;">12</div>
+      <div class="rail-tick" style="top:50%;"></div><div class="rail-tick-lbl" style="top:50%;">18</div>
+      <div class="rail-tick" style="top:75%;"></div><div class="rail-tick-lbl" style="top:75%;">00</div>
+      <div class="rail-now" id="railNow" style="top:40%;"></div>
+      <div class="rail-next" id="railNext" style="top:69%;"><span class="mark"></span></div>
+    </div>
+  </div>
+
+  <div class="viewport">
+    <div class="track" id="track">
+      <div class="panel" id="panel0">
+        <div class="term-line"><span id="termLabel">Term V · Day — / —</span><span id="termDate">—</span></div>
+
+        <div class="hero">
+          <div class="hero-main">
+            <div class="until" id="untilLabel">Next session in</div>
+            <div class="odometer">
+              <div class="digit-col" id="digitTens"><div class="strip" id="stripTens"></div></div>
+              <div class="digit-col" id="digitOnes"><div class="strip" id="stripOnes"></div></div>
+              <span class="unit">HRS</span>
+            </div>
+            <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="target" id="targetLabel">—</div>
+            <div class="meta" id="metaLabel">—</div>
+          </div>
+          <div class="hero-side" id="heroSide">Term V · Live</div>
+        </div>
+
+        <div>
+          <button type="button" class="sec-lbl link" onclick="goTo(1)">Needs attention · swipe for sessions →</button>
+          <div class="bento" style="margin-top:12px;" id="bento"></div>
+        </div>
+
+        <div>
+          <div class="sec-lbl">Attendance</div>
+          <div class="wave" style="margin-top:14px;" id="wave"></div>
+          <div class="wave-note" id="waveNote"></div>
+        </div>
+
+        <div class="footer-note"><div class="dot active" id="dot0"></div><div class="dot" id="dot1"></div></div>
+      </div>
+
+      <div class="panel" id="panel1">
+        <div class="term-line">
+          <button type="button" class="back-hint" onclick="goTo(0)" aria-label="Back to home glance"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg> back to glance</button>
+          <span>This week</span>
+        </div>
+
+        <div class="sec-lbl" style="margin-top:4px;">This week's sessions</div>
+        <div style="margin-top:2px;" id="sessionsList"></div>
+
+        <div class="footer-note"><div class="dot" id="dot0b"></div><div class="dot active" id="dot1b"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="overlay">
+    <div class="ov-accent"></div>
+    <div class="ov-grip"></div>
+    <div class="ov-body" id="ovBody"></div>
+  </div>
+</div>
+
+<script>
+  var DATA = null;
+  var colorVar = { purple: 'var(--purple)', blue: 'var(--blue)', green: 'var(--green)', faint: 'var(--text-faint)' };
+  var glowVar = { purple: 'var(--purple-glow)', blue: 'var(--blue-glow)', green: 'var(--green-glow)', faint: null };
+
+  fetch('./data.json?t=' + Date.now()).then(function(r){ return r.json(); }).then(function(d){
+    DATA = d;
+    render(d);
+    document.getElementById('loading').classList.add('hidden');
+    setInterval(function(){ renderLiveBits(DATA); }, 60000);
+  }).catch(function(e){
+    document.getElementById('loading').textContent = 'offline · showing cached';
+  });
+
+  function fmtDayLabel(dateObj){
+    return dateObj.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
+  }
+  function shortDay(dateObj){
+    return dateObj.toLocaleDateString('en-GB', { weekday: 'short' });
+  }
+  function fmtTimeRange(startISO, endISO){
+    var s = new Date(startISO), e = new Date(endISO);
+    var opt = { hour: '2-digit', minute: '2-digit', hour12: false };
+    return s.toLocaleTimeString('en-GB', opt) + '–' + e.toLocaleTimeString('en-GB', opt);
+  }
+
+  function render(d){
+    document.getElementById('termLabel').textContent = d.term.label + ' · Day ' + d.term.day + ' / ' + d.term.totalDays;
+    document.getElementById('termDate').textContent = d.term.dateLabel;
+
+    var dl = d.deadlines[0];
+    var bento = document.getElementById('bento');
+    bento.innerHTML =
+      '<button type="button" class="tile urgent big" id="dlTile" aria-label="' + dl.label + ', tap for detail">' +
+        '<div class="tlbl">' + dl.label + '</div>' +
+        '<div class="tval" id="dlDays">—</div>' +
+        '<div class="tsub">' + dl.sub + '</div>' +
+        '<div class="tap-hint">tap for detail →</div>' +
+      '</button>' +
+      '<div class="bento-stack">' +
+        '<div class="tile steady small"><div class="tlbl">Registrar</div><div class="tval">' + d.registrar.count + '</div><div class="tsub">' + d.registrar.sub + '</div></div>' +
+        '<div class="tile flat small"><div class="tlbl">Electives</div><div class="tval">' + d.electives.value + '</div><div class="tsub">' + d.electives.sub + '</div></div>' +
+      '</div>';
+    document.getElementById('dlTile').addEventListener('click', function(e){ openOverlay(this, dl); });
+
+    var wave = document.getElementById('wave');
+    wave.innerHTML = d.attendance.map(function(a, i){
+      return '<div class="wave-bar"><div class="stem"><i style="transition-delay:' + (i*0.1) + 's;" data-pct="' + a.pct + '"></i></div><div class="rlbl">' + a.course + '</div></div>';
+    }).join('');
+    document.getElementById('waveNote').textContent = d.attendanceNote || '';
+
+    var list = document.getElementById('sessionsList');
+    list.innerHTML = d.sessions.map(function(s){
+      var glow = glowVar[s.color] ? ('box-shadow:0 0 6px ' + glowVar[s.color] + ';') : '';
+      return '<div class="row"><div class="rc-bar" style="background:' + colorVar[s.color] + ';' + glow + '"></div>' +
+        '<div class="rc-body"><div class="rc-course">' + s.course + ' · ' + s.code + '</div>' +
+        '<div class="rc-meta">' + fmtTimeRange(s.start, s.end) + ' · ' + s.room + '</div></div>' +
+        '<div class="rc-day">' + shortDay(new Date(s.start)) + '</div></div>';
+    }).join('');
+
+    renderLiveBits(d);
+
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        document.querySelectorAll('.wave-bar .stem i').forEach(function(el){
+          var pct = parseFloat(el.getAttribute('data-pct')) || 0;
+          el.style.height = Math.max(pct, 4) + '%';
+        });
+        document.getElementById('progressFill').style.width = computeTermProgress(d) + '%';
+      });
+    });
+  }
+
+  function computeTermProgress(d){
+    var p = (d.term.day / d.term.totalDays) * 100;
+    return Math.min(Math.max(p, 2), 100).toFixed(0);
+  }
+
+  function railFrac(dateObj){
+    var h = dateObj.getHours() + dateObj.getMinutes()/60;
+    var rel = (h - 6 + 24) % 24;
+    return (rel / 24) * 100;
+  }
+
+  var lastTens = null, lastOnes = null;
+  function buildStrip(el){
+    if (el.children.length) return;
+    for (var i=0;i<10;i++){ var s=document.createElement('span'); s.textContent=i; el.appendChild(s); }
+  }
+  function setDigit(colEl, stripEl, digit){
+    buildStrip(stripEl);
+    stripEl.style.transform = 'translateY(-' + (digit * 88) + 'px)';
+  }
+
+  function renderLiveBits(d){
+    if (!d) return;
+    var now = new Date();
+
+    document.getElementById('railNow').style.top = railFrac(now) + '%';
+
+    var ns = new Date(d.nextSession.start);
+    var diffMs = ns - now;
+    var untilLabel = document.getElementById('untilLabel');
+    var target = document.getElementById('targetLabel');
+    var meta = document.getElementById('metaLabel');
+    var railNext = document.getElementById('railNext');
+
+    if (diffMs <= 0 && now < new Date(d.nextSession.end)) {
+      untilLabel.textContent = 'In session';
+      setDigit(null, document.getElementById('stripTens'), 0);
+      setDigit(null, document.getElementById('stripOnes'), 0);
+    } else {
+      var hoursLeft = Math.max(diffMs, 0) / 36e5;
+      var hh = Math.min(Math.floor(hoursLeft), 99);
+      var tens = Math.floor(hh/10), ones = hh%10;
+      if (tens !== lastTens){ setDigit(null, document.getElementById('stripTens'), tens); lastTens = tens; }
+      if (ones !== lastOnes){ setDigit(null, document.getElementById('stripOnes'), ones); lastOnes = ones; }
+      untilLabel.textContent = 'Next session in';
+    }
+    target.textContent = d.nextSession.course + ' · ' + d.nextSession.code;
+    meta.textContent = ns.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false}) + ' · ' + d.nextSession.room;
+    railNext.style.top = railFrac(ns) + '%';
+
+    var dl = d.deadlines[0];
+    if (dl){
+      var due = new Date(dl.due);
+      var daysLeft = Math.max(Math.ceil((due - now) / 864e5), 0);
+      var el = document.getElementById('dlDays');
+      if (el) el.textContent = daysLeft + 'D';
+    }
+  }
+
+  var prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function runSpring(from, to, velocity, opts, onUpdate, onDone){
+    if (prefersReducedMotion){ onUpdate(to); onDone && onDone(); return; }
+    var stiffness = opts.stiffness || 120, damping = opts.damping || 22, mass = opts.mass || 1;
+    var pos = from, vel = velocity || 0, last = performance.now();
+    function frame(now){
+      var dt = Math.min((now - last) / 1000, 0.032); last = now;
+      var force = -stiffness * (pos - to);
+      var damp = -damping * vel;
+      var accel = (force + damp) / mass;
+      vel += accel * dt;
+      pos += vel * dt;
+      onUpdate(pos);
+      if (Math.abs(pos - to) > 0.3 || Math.abs(vel) > 3){
+        requestAnimationFrame(frame);
+      } else {
+        onUpdate(to); onDone && onDone();
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  var track = document.getElementById('track');
+  var viewportW = 0;
+  function measureViewport(){ viewportW = document.querySelector('.viewport').clientWidth; }
+  measureViewport();
+  window.addEventListener('resize', measureViewport);
+
+  var panelIndex = 0, dragging = false, dragStartX = 0, lastMoveX = 0, lastMoveT = 0, velX = 0;
+
+  function setTrackX(px){ track.style.transform = 'translateX(' + px + 'px)'; }
+  function targetForIndex(i){ return -i * viewportW; }
+  setTrackX(0);
+
+  track.addEventListener('pointerdown', function(e){
+    if (e.target.closest('.tile') || e.target.closest('.overlay') || e.target.closest('button')) return;
+    dragging = true; dragStartX = e.clientX; lastMoveX = e.clientX; lastMoveT = performance.now(); velX = 0;
+    track.setPointerCapture(e.pointerId);
+  });
+  track.addEventListener('pointermove', function(e){
+    if (!dragging) return;
+    var dx = e.clientX - dragStartX;
+    var base = targetForIndex(panelIndex);
+    var raw = base + dx;
+    var min = targetForIndex(1), max = targetForIndex(0);
+    if (raw > max) raw = max + (raw - max) * 0.35;
+    if (raw < min) raw = min + (raw - min) * 0.35;
+    setTrackX(raw);
+    var now = performance.now();
+    var dt = Math.max(now - lastMoveT, 1);
+    velX = (e.clientX - lastMoveX) / dt * 1000;
+    lastMoveX = e.clientX; lastMoveT = now;
+    updateDots(raw);
+  });
+  function endDrag(){
+    if (!dragging) return; dragging = false;
+    var style = getComputedStyle(track).transform;
+    var matrix = new DOMMatrixReadOnly(style);
+    var cur = matrix.m41;
+    var proj = cur + velX * 0.1;
+    var next = proj < -viewportW/2 ? 1 : 0;
+    if (velX < -300) next = 1;
+    if (velX > 300) next = 0;
+    goTo(next, velX);
+  }
+  track.addEventListener('pointerup', endDrag);
+  track.addEventListener('pointercancel', endDrag);
+
+  function goTo(i, initialVel){
+    panelIndex = i;
+    var style = getComputedStyle(track).transform;
+    var matrix = new DOMMatrixReadOnly(style);
+    var from = matrix.m41;
+    runSpring(from, targetForIndex(i), initialVel || 0, {stiffness:110, damping:20}, function(v){
+      setTrackX(v); updateDots(v);
+    });
+  }
+  function updateDots(px){
+    var t = viewportW ? Math.min(Math.max(-px / viewportW, 0), 1) : 0;
+    document.getElementById('dot0').style.opacity = 1 - t*0.75;
+    document.getElementById('dot1').style.opacity = 0.25 + t*0.75;
+    document.getElementById('dot0').classList.toggle('active', t < 0.5);
+    document.getElementById('dot1').classList.toggle('active', t >= 0.5);
+  }
+
+  var overlay = document.getElementById('overlay');
+  var device = document.getElementById('device');
+  var lastTileRect = null;
+  var ovDragging = false, ovProgress = 0, ovLastY = 0, ovLastT = 0, ovVelY = 0, ovStartY = 0;
+
+  function rectNow(){ var d = device.getBoundingClientRect(); return { left:0, top:0, width:d.width, height:d.height }; }
+  function lerpRect(a, b, t){
+    return { left: a.left + (b.left - a.left) * t, top: a.top + (b.top - a.top) * t,
+      width: a.width + (b.width - a.width) * t, height: a.height + (b.height - a.height) * t, radius: 14 * (1 - t) };
+  }
+  function applyRect(r){
+    overlay.style.left = r.left + 'px'; overlay.style.top = r.top + 'px';
+    overlay.style.width = r.width + 'px'; overlay.style.height = r.height + 'px';
+    overlay.style.borderRadius = r.radius + 'px';
+  }
+  function openOverlay(tileEl, dl){
+    var now = new Date();
+    var due = new Date(dl.due);
+    var daysLeft = Math.max(Math.ceil((due - now) / 864e5), 0);
+    document.getElementById('ovBody').innerHTML =
+      '<div class="ov-lbl">Needs attention · ' + dl.label + '</div>' +
+      '<div class="ov-title">' + dl.label + ' submission</div>' +
+      '<div class="ov-count">' + daysLeft + '<span class="u">days left</span></div>' +
+      '<div class="ov-list">' + dl.items.map(function(it){ return '<div class="ov-item"><span>' + it.label + '</span><b>' + it.status + '</b></div>'; }).join('') + '</div>' +
+      '<button type="button" class="ov-close" onclick="closeOverlayTap()">← back to glance</button>';
+
+    var dRect = device.getBoundingClientRect();
+    var tRect = tileEl.getBoundingClientRect();
+    lastTileRect = { left: tRect.left - dRect.left, top: tRect.top - dRect.top, width: tRect.width, height: tRect.height };
+    overlay.classList.remove('hidden');
+    applyRect(lerpRect(lastTileRect, rectNow(), 0));
+    ovProgress = 0;
+    requestAnimationFrame(function(){
+      runSpring(0, 1, 0, {stiffness:100, damping:22}, function(v){ ovProgress = v; applyRect(lerpRect(lastTileRect, rectNow(), v)); });
+    });
+  }
+  function finishClose(){ setTimeout(function(){ overlay.classList.add('hidden'); }, 30); }
+  function closeOverlayTap(){
+    runSpring(ovProgress, 0, 0, {stiffness:100, damping:24}, function(v){ ovProgress = v; applyRect(lerpRect(lastTileRect, rectNow(), v)); }, finishClose);
+  }
+  overlay.addEventListener('pointerdown', function(e){
+    if (e.target.closest('.ov-close')) return;
+    ovDragging = true; ovStartY = e.clientY; ovLastY = e.clientY; ovLastT = performance.now(); ovVelY = 0;
+    overlay.setPointerCapture(e.pointerId);
+  });
+  overlay.addEventListener('pointermove', function(e){
+    if (!ovDragging) return;
+    var dy = e.clientY - ovStartY;
+    var drag = Math.max(dy, 0);
+    var t = Math.max(1 - drag / 300, 0);
+    ovProgress = t;
+    applyRect(lerpRect(lastTileRect, rectNow(), t));
+    var now = performance.now();
+    var dt = Math.max(now - ovLastT, 1);
+    ovVelY = (e.clientY - ovLastY) / dt * 1000;
+    ovLastY = e.clientY; ovLastT = now;
+  });
+  function ovEndDrag(){
+    if (!ovDragging) return; ovDragging = false;
+    var shouldClose = ovProgress < 0.6 || ovVelY > 400;
+    if (shouldClose){
+      runSpring(ovProgress, 0, ovVelY * 0.002, {stiffness:100, damping:24}, function(v){ ovProgress = v; applyRect(lerpRect(lastTileRect, rectNow(), v)); }, finishClose);
+    } else {
+      runSpring(ovProgress, 1, 0, {stiffness:100, damping:22}, function(v){ ovProgress = v; applyRect(lerpRect(lastTileRect, rectNow(), v)); });
+    }
+  }
+  overlay.addEventListener('pointerup', ovEndDrag);
+  overlay.addEventListener('pointercancel', ovEndDrag);
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('./sw.js').catch(function(){});
+    });
+  }
+</script>
+</body>
+</html>
