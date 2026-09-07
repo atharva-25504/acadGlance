@@ -1,0 +1,136 @@
+{
+  "generatedAt": "2026-09-07T21:15:00+05:30",
+  "term": {
+    "label": "Term V",
+    "day": 1,
+    "totalDays": 97,
+    "dateLabel": "Mon 07 Sep"
+  },
+  "nextSession": {
+    "course": "ISDC",
+    "code": "S01",
+    "start": "2026-09-07T19:45:00+05:30",
+    "end": "2026-09-07T21:15:00+05:30",
+    "room": "Room 204"
+  },
+  "deadlines": [
+    {
+      "id": "mdt",
+      "label": "MDT project",
+      "sub": "Report + prototype + demo, due together",
+      "due": "2026-09-08T23:59:00+05:30",
+      "tone": "urgent",
+      "items": [
+        {
+          "label": "Report (PDF)",
+          "status": "Not started"
+        },
+        {
+          "label": "Prototype link",
+          "status": "GitHub ok"
+        },
+        {
+          "label": "Demo video",
+          "status": "8 min max"
+        }
+      ]
+    }
+  ],
+  "registrar": {
+    "count": 3,
+    "sub": "Unread notices"
+  },
+  "electives": {
+    "value": "9–15",
+    "sub": "Term VI rule"
+  },
+  "attendance": [
+    {
+      "course": "CBM",
+      "pct": 0
+    },
+    {
+      "course": "ESN",
+      "pct": 0
+    },
+    {
+      "course": "ISDC",
+      "pct": 0
+    },
+    {
+      "course": "MDPW",
+      "pct": 0
+    },
+    {
+      "course": "BDDM",
+      "pct": 0
+    }
+  ],
+  "attendanceNote": "Term V not started · tracking begins with S01s",
+  "sessions": [
+    {
+      "course": "ISDC",
+      "code": "S01",
+      "start": "2026-09-07T19:45:00+05:30",
+      "end": "2026-09-07T21:15:00+05:30",
+      "room": "Room 204",
+      "color": "purple"
+    },
+    {
+      "course": "ISDC",
+      "code": "S02",
+      "start": "2026-09-08T09:00:00+05:30",
+      "end": "2026-09-08T10:30:00+05:30",
+      "room": "Room 204",
+      "color": "purple"
+    },
+    {
+      "course": "MDPW",
+      "code": "S01",
+      "start": "2026-09-08T16:00:00+05:30",
+      "end": "2026-09-08T17:30:00+05:30",
+      "room": "Room 112",
+      "color": "blue"
+    },
+    {
+      "course": "ESNVM",
+      "code": "S01",
+      "start": "2026-09-10T14:15:00+05:30",
+      "end": "2026-09-10T15:45:00+05:30",
+      "room": "Room 208",
+      "color": "green"
+    },
+    {
+      "course": "MDPW",
+      "code": "S02",
+      "start": "2026-09-10T16:00:00+05:30",
+      "end": "2026-09-10T17:30:00+05:30",
+      "room": "Room 112",
+      "color": "blue"
+    },
+    {
+      "course": "CBM",
+      "code": "S01",
+      "start": "2026-09-11T14:15:00+05:30",
+      "end": "2026-09-11T15:45:00+05:30",
+      "room": "Room 301",
+      "color": "faint"
+    },
+    {
+      "course": "BDDM",
+      "code": "S01",
+      "start": "2026-09-11T18:00:00+05:30",
+      "end": "2026-09-11T19:30:00+05:30",
+      "room": "Room 301",
+      "color": "faint"
+    },
+    {
+      "course": "CBM",
+      "code": "S02",
+      "start": "2026-09-11T21:45:00+05:30",
+      "end": "2026-09-11T23:15:00+05:30",
+      "room": "Room 301",
+      "color": "faint"
+    }
+  ]
+}
