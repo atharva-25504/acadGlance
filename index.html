@@ -250,11 +250,22 @@
     return s.toLocaleTimeString('en-GB', opt) + '–' + e.toLocaleTimeString('en-GB', opt);
   }
 
-  function render(d){
-    document.getElementById('termLabel').textContent = d.term.label + ' · Day ' + d.term.day + ' / ' + d.term.totalDays;
-    document.getElementById('termDate').textContent = d.term.dateLabel;
+  function computeTermDay(d, now){
+    var start = new Date(d.term.startDate + 'T00:00:00+05:30');
+    var diffDays = Math.floor((now - start) / 864e5) + 1;
+    return Math.min(Math.max(diffDays, 1), d.term.totalDays);
+  }
+  function fmtTermDate(now){
+    return now.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' });
+  }
 
-    var dl = d.deadlines[0];
+  function render(d){
+    var now0 = new Date();
+    var termDay = computeTermDay(d, now0);
+    document.getElementById('termLabel').textContent = d.term.label + ' · Day ' + termDay + ' / ' + d.term.totalDays;
+    document.getElementById('termDate').textContent = fmtTermDate(now0);
+
+    var dl = d.deadlines.slice().sort(function(a,b){ return new Date(a.due) - new Date(b.due); })[0];
     var bento = document.getElementById('bento');
     bento.innerHTML =
       '<button type="button" class="tile urgent big" id="dlTile" aria-label="' + dl.label + ', tap for detail">' +
@@ -298,7 +309,7 @@
   }
 
   function computeTermProgress(d){
-    var p = (d.term.day / d.term.totalDays) * 100;
+    var p = (computeTermDay(d, new Date()) / d.term.totalDays) * 100;
     return Math.min(Math.max(p, 2), 100).toFixed(0);
   }
 
@@ -371,7 +382,7 @@
       meta.textContent = start.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',hour12:false}) + ' · ' + s.room;
     }
 
-    var dl = d.deadlines[0];
+    var dl = d.deadlines.slice().sort(function(a,b){ return new Date(a.due) - new Date(b.due); })[0];
     if (dl){
       var due = new Date(dl.due);
       var daysLeft = Math.max(Math.ceil((due - now) / 864e5), 0);
